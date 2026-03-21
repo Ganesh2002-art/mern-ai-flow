@@ -4,6 +4,8 @@ import "reactflow/dist/style.css";
 import axios from "axios";
 import { initialNodes, edges } from "./flow";
 
+const BASE_URL = "https://mern-ai-flow-1.onrender.com"; // ✅ your backend
+
 function App() {
   const [nodes, setNodes] = useState(initialNodes);
   const [prompt, setPrompt] = useState("");
@@ -19,7 +21,7 @@ function App() {
     try {
       setLoading(true);
 
-      const res = await axios.post("http://localhost:5000/api/ask-ai", {
+      const res = await axios.post(`${BASE_URL}/api/ask-ai`, {
         prompt,
       });
 
@@ -33,6 +35,7 @@ function App() {
         )
       );
     } catch (err) {
+      console.error(err);
       alert("Error fetching AI");
     } finally {
       setLoading(false);
@@ -45,12 +48,17 @@ function App() {
       return;
     }
 
-    await axios.post("http://localhost:5000/api/save", {
-      prompt,
-      response: result,
-    });
+    try {
+      await axios.post(`${BASE_URL}/api/save`, {
+        prompt,
+        response: result,
+      });
 
-    alert("Saved to MongoDB ✅");
+      alert("Saved to MongoDB ✅");
+    } catch (err) {
+      console.error(err);
+      alert("Save failed");
+    }
   };
 
   return (
@@ -71,6 +79,8 @@ function App() {
       <button onClick={saveData} style={{ marginLeft: 10 }}>
         Save
       </button>
+
+      {loading && <p>🤖 Thinking...</p>}
 
       <div style={{ height: "80%", marginTop: 20 }}>
         <ReactFlow nodes={nodes} edges={edges} />
